@@ -3,7 +3,7 @@ package cert
 import (
 	"fmt"
 
-	"github.com/calaos/calaos_dns/calaos_ddns/cert/calaosdns"
+	"github.com/calaos/calaos_ddns/cert/calaosdns"
 	"github.com/xenolf/lego/certcrypto"
 	"github.com/xenolf/lego/lego"
 	"github.com/xenolf/lego/registration"

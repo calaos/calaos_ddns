@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/calaos/calaos_dns/calaos_ddns/calaos"
+	"github.com/calaos/calaos_ddns/calaos"
 	"github.com/dghubble/sling"
 	"github.com/xenolf/lego/challenge"
 	"github.com/xenolf/lego/challenge/dns01"

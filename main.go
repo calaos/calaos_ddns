@@ -14,13 +14,13 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/calaos/calaos_dns/calaos_ddns/calaos"
-	lecert "github.com/calaos/calaos_dns/calaos_ddns/cert"
-	"github.com/calaos/calaos_dns/calaos_ddns/haproxy"
+	"github.com/calaos/calaos_ddns/calaos"
+	lecert "github.com/calaos/calaos_ddns/cert"
+	"github.com/calaos/calaos_ddns/haproxy"
 	"github.com/calaos/calaos_dns/utils"
 	"github.com/dghubble/sling"
 	"github.com/fatih/color"
-	"github.com/jawher/mow.cli"
+	cli "github.com/jawher/mow.cli"
 	"github.com/mattn/go-isatty"
 	"github.com/xenolf/lego/platform/config/env"
 )
