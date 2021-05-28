@@ -42,12 +42,12 @@ defaults
 
 frontend calaos-http
     bind *:80
-    reqadd X-Forwarded-Proto:\ http
+    http-request set-header X-Forwarded-Proto http
     default_backend {{ .DefaultBackend }}
 
 frontend home-https
     bind *:443 ssl crt /etc/ssl/haproxy/server.pem
-    reqadd X-Forwarded-Proto:\ https
+    http-request set-header X-Forwarded-Proto https
 		
 {{- range .Backends -}}
 {{- if .Ip}}
