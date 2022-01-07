@@ -4,6 +4,15 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      repo:
+        description: 'Repo (calaos, calaos-dev)'
+        required: true
+        default: 'calaos-dev'
+      arch:
+        description: 'Arch'
+        required: true
+        default: 'x86_64'
 
 jobs:
   build:
@@ -16,4 +25,4 @@ jobs:
           token: ${{ secrets.ACTION_DISPATCH }}
           repository: calaos/calaos-build
           event-type: build_pkg
-          client-payload: '{"pkgname": "calaos-ddns" }'
+          client-payload: '{"pkgname": "calaos-ddns", "repo": "${{ github.event.inputs.repo }}", "arch": "${{ github.event.inputs.arch }}" }'
