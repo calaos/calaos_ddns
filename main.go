@@ -63,6 +63,8 @@ func main() {
 
 	mnApp := cli.App("calaos_ddns", "Client for Calaos Dynamic DNS API")
 
+	mnApp.Version("v version", "Calaos DDNS " + BuildVersion)
+
 	mnApp.Command("register", "Register a DNS record", cmdRegister)
 	mnApp.Command("unregister", "Unregister the saved DNS record", cmdUnregister)
 	mnApp.Command("update", "Update IP of DNS record", cmdUpdate)
