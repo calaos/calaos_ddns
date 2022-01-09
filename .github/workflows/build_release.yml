@@ -6,9 +6,6 @@ on:
       version:
         description: 'Package version (x.x.x)'
         required: true
-      sha:
-        description: 'Commit SHA to build package for (use latest default branch is not set)'
-        required: false
 
 jobs:
   build:
@@ -21,4 +18,10 @@ jobs:
           token: ${{ secrets.ACTION_DISPATCH }}
           repository: calaos/calaos-build
           event-type: build_pkg
-          client-payload: '{"pkgname": "calaos-ddns", "repo": "calaos", "version": "${{ github.event.inputs.version }}", "commit": "${{ github.event.inputs.sha }}" }'
+          client-payload: '{"pkgname": "calaos-ddns", "repo": "calaos", "version": "${{ github.event.inputs.version }}", "commit": "${{ github.sha }}" }'
+
+      - name: Create Tag
+        uses: negz/create-tag@v1
+        with:
+          version: ${{ github.event.inputs.version }}
+          token: ${{ secrets.ACTION_DISPATCH }}
