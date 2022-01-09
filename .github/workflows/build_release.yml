@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Package version (x.x.x-dev)'
+        description: 'Package version (x.x.x)'
         required: true
       sha:
         description: 'Commit SHA to build package for (use latest default branch is not set)'
