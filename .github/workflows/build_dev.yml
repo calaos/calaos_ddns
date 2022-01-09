@@ -1,9 +1,14 @@
 name: Build dev from tag
 
 on:
-  push:
-    tags:
-      - '*.*.*-dev'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version (x.x.x-dev)'
+        required: true
+      sha:
+        description: 'Commit SHA to build package for (use latest default branch is not set)'
+        required: false
 
 jobs:
   build:
@@ -16,4 +21,4 @@ jobs:
           token: ${{ secrets.ACTION_DISPATCH }}
           repository: calaos/calaos-build
           event-type: build_pkg
-          client-payload: '{"pkgname": "calaos-ddns", "repo": "calaos-dev", "arch": "${{ github.event.inputs.arch }}", "version": "${{ github.ref_name }}", "commit": "${{ github.sha }}" }'
+          client-payload: '{"pkgname": "calaos-ddns", "repo": "calaos-dev", "version": "${{ github.event.inputs.version }}", "commit": "${{ github.event.inputs.sha }}" }'
