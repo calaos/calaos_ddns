@@ -1,4 +1,4 @@
-name: Build release from tag
+name: Build release package
 
 on:
   workflow_dispatch:

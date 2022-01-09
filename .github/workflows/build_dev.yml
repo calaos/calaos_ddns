@@ -1,4 +1,4 @@
-name: Build dev from tag
+name: Build dev package
 
 on:
   workflow_dispatch:
