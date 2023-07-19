@@ -203,7 +203,7 @@ func cmdRegister(cmd *cli.Cmd) {
 						fmt.Println(errorRed(CharAbort), "Failed to write certificate:", err)
 					}
 
-					templateFile := filepath.Join(env.GetOrDefaultString("CALAOS_HAPROXY_PATH", "/etc/haproxy"), "haproxy.template")
+					templateFile := filepath.Join(env.GetOrDefaultString("CALAOS_HAPROXY_TEMPLATE_PATH", "/etc/haproxy"), "haproxy.template")
 					outFile := filepath.Join(env.GetOrDefaultString("CALAOS_HAPROXY_PATH", "/etc/haproxy"), "haproxy.cfg")
 					err = haproxy.RenderConfig(outFile, templateFile, haconf)
 					if err != nil {

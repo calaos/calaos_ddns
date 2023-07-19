@@ -1,7 +1,7 @@
 GOCMD=go
 GOTEST=$(GOCMD) test
 GOVET=$(GOCMD) vet
-BINARY_NAME=calaos-ddns
+BINARY_NAME=calaos_ddns
 VERSION?=1.0.0
 
 GREEN  := $(shell tput -Txterm setaf 2)

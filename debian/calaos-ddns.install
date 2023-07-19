@@ -1,2 +1,2 @@
-bin/calaos-ddns usr/bin
+bin/calaos_ddns usr/bin
 haproxy/haproxy.template usr/share/calaos-ddns
