@@ -1,0 +1,9 @@
+Source: calaos-ddns
+Maintainer: Calaos Team <team@calaos.fr>
+Build-Depends: debhelper (>= 11),
+               golang
+
+Package: calaos-ddns
+Architecture: any
+Description: Calaos-OS DynDNS Client service
+Depends: ${misc:Depends}, ${shlibs:Depends}

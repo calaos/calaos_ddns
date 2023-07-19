@@ -1,0 +1,10 @@
+[Unit]
+Description=Service that update Calaos Dynamic DNS periodically
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/calaos_ddns update
+Environment="HOME=/home/root"
+Environment="CALAOS_HAPROXY_PATH=/mnt/calaos/haproxy"
+Environment="CALAOS_CERT_FILE=/mnt/calaos/ssl/haproxy"
+Environment="CALAOS_CONFIG=/mnt/calaos/config"

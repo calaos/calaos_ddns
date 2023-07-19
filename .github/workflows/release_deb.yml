@@ -1,0 +1,52 @@
+name: Build release deb package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package version (x.x.x)'
+        required: true
+
+jobs:
+  build-and-push-deb-pkg:
+    name: Build deb package and push to repositories
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+
+      - name: Build package
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ghcr.io/calaos/debian_deb_build_base
+          options: -v ${{ github.workspace }}:/work
+          run: |
+            /build-deb.sh ${{ github.event.inputs.version }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: deb
+          path: pkg/*.deb
+
+      - name: Create Tag
+        uses: negz/create-tag@v1
+        with:
+          version: ${{ github.event.inputs.version }}
+          token: ${{ secrets.ACTION_DISPATCH }}
+
+      - name: Create a Release
+        uses: meeDamian/github-release@2.0
+        with:
+          token: ${{ secrets.ACTION_DISPATCH }}
+          tag: ${{ github.event.inputs.version }}
+          name: ${{ github.event.inputs.version }}
+          files: pkg/*.deb
+          gzip: false
+
+      - name: Update repo cache
+        uses: distributhor/workflow-webhook@v3
+        env:
+          webhook_url: ${{ secrets.WEBHOOK_URL }}
+          webhook_secret: ${{ secrets.WEBHOOK_SECRET }}
