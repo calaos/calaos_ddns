@@ -1,11 +1,19 @@
-name: Build release deb package
+name: Build dev and release deb package
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Package version (x.x.x)'
+      vincrement:
+        description: 'Package version increment (major.minor.xxx)'
         required: true
+        default: 'patch'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
 
 jobs:
   build-and-push-deb-pkg:
@@ -13,8 +21,14 @@ jobs:
     runs-on: ubuntu-latest
   
     steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Calaos Action Bump Version
+        id: calaos_version
+        uses: calaos/action-bump-version@2
+        with:
+          version_fragment: ${{ github.event.inputs.vincrement || 'prerelease' }}
 
       - name: Build package
         uses: addnab/docker-run-action@v3
@@ -22,7 +36,7 @@ jobs:
           image: ghcr.io/calaos/debian_deb_build_base
           options: -v ${{ github.workspace }}:/work
           run: |
-            /build-deb.sh ${{ github.event.inputs.version }}
+            /build-deb.sh ${{ steps.calaos_version.outputs.version_bumped }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
@@ -33,15 +47,15 @@ jobs:
       - name: Create Tag
         uses: negz/create-tag@v1
         with:
-          version: ${{ github.event.inputs.version }}
+          version: ${{ steps.calaos_version.outputs.version_bumped }}
           token: ${{ secrets.ACTION_DISPATCH }}
 
       - name: Create a Release
         uses: meeDamian/github-release@2.0
         with:
           token: ${{ secrets.ACTION_DISPATCH }}
-          tag: ${{ github.event.inputs.version }}
-          name: ${{ github.event.inputs.version }}
+          tag: ${{ steps.calaos_version.outputs.version_bumped }}
+          name: ${{ steps.calaos_version.outputs.version_bumped }}
           files: pkg/*.deb
           gzip: false
 
