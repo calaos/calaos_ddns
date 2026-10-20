@@ -63,6 +63,10 @@ type CalaosOption struct {
 func GetConfig(key string) (err error, value string) {
 	xmlFile, err := os.Open(getConfigFile(LOCAL_CONFIG))
 	if err != nil {
+		// calaos-server creates the file on its first start; until then nothing is configured.
+		if os.IsNotExist(err) {
+			return nil, ""
+		}
 		log.Println("Failed to open file:", err)
 		return
 	}

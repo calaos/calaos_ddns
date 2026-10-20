@@ -279,7 +279,7 @@ func cmdUpdate(cmd *cli.Cmd) {
 		}
 
 		if token == "" {
-			exit(fmt.Errorf("Saved token not found. Nothing to update."), 0)
+			fmt.Println("No DDNS registration found. Nothing to update.")
 			return
 		}
 
