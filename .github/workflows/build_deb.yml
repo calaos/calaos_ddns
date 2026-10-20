@@ -58,6 +58,9 @@ jobs:
           name: ${{ steps.calaos_version.outputs.version_bumped }}
           files: pkg/*.deb
           gzip: false
+          # The deb repository files every non-prerelease under "releases":
+          # a push build must stay out of the stable channel.
+          prerelease: ${{ github.event_name == 'push' }}
 
       - name: Update repo cache
         uses: distributhor/workflow-webhook@v3
