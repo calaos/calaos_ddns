@@ -64,6 +64,7 @@ frontend home-https
 {{range .Backends}}
 {{- if .Ip}}
 backend {{.Name}}
+	http-request set-header X-Forwarded-Proto %[ssl_fc,iif(https,http)]
 	redirect scheme https if !{ ssl_fc }
 	server {{.ServerName}} {{.Ip}}:{{.Port}} check
 {{end -}}
