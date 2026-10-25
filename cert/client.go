@@ -9,7 +9,7 @@ import (
 	"github.com/xenolf/lego/registration"
 )
 
-func createClient(u SSLUser) (client *lego.Client, err error) {
+func createClient(u SSLUser, token string) (client *lego.Client, err error) {
 
 	c := lego.NewConfig(&u)
 	c.CADirURL = conf.DirectoryURL
@@ -18,11 +18,11 @@ func createClient(u SSLUser) (client *lego.Client, err error) {
 	// Create a new client instance
 	client, err = lego.NewClient(c)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create client: %v, %v", err, c)
+		return nil, fmt.Errorf("failed to create client: %v", err)
 	}
 
 	// Setup DNS challenge
-	provider, err := calaosdns.NewDNSProvider()
+	provider, err := calaosdns.NewDNSProvider(token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create DNS provider: %v", err)
 	}

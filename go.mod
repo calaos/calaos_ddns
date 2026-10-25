@@ -11,7 +11,7 @@ require (
 	github.com/jawher/mow.cli v1.0.4
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4
-	github.com/miekg/dns v1.1.4 // indirect
+	github.com/miekg/dns v1.1.4
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/xenolf/lego v2.1.0+incompatible

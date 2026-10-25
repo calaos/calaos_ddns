@@ -4,6 +4,8 @@ Description=Service that update Calaos Dynamic DNS periodically
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/calaos_ddns update
+# 5: another calaos_ddns run holds the lock; this run did nothing.
+SuccessExitStatus=5
 Environment="HOME=/home/root"
 Environment="CALAOS_HAPROXY_PATH=/mnt/calaos/haproxy"
 Environment="CALAOS_CERT_FILE=/mnt/calaos/haproxy/server.pem"

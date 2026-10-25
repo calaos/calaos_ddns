@@ -14,7 +14,7 @@ import (
 // CR represents an Lego Certificate Resource
 type CR struct {
 	Domain            string   `json:"domain"`
-	Domains           []string `json:domains`
+	Domains           []string `json:"domains"`
 	CertURL           string   `json:"certUrl"`
 	CertStableURL     string   `json:"certStableUrl"`
 	PrivateKey        []byte   `json:"privateKey"`

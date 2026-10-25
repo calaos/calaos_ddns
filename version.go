@@ -1,5 +1,5 @@
 package main
 
-var (    
-    BuildVersion string = "git"
+var (
+	BuildVersion string = "git"
 )
