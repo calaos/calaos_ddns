@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 
@@ -32,38 +31,30 @@ func (u SSLUser) GetPrivateKey() crypto.PrivateKey {
 }
 
 // get SSL User from cacheDir or create a new one
-func getUser(email string) SSLUser {
-
-	// no cached cert. start from scratch
+func getUser(email string) (SSLUser, error) {
 	var u SSLUser
 
-	// do we have a user?
 	b, err := ioutil.ReadFile(conf.CacheDir + "/SSLUser.json")
 	if err == nil {
-		// user exists. load
-		err = json.Unmarshal(b, &u)
-		if err != nil {
-			fmt.Println("[FATAL] cert: failed to unmarshal SSLUser: ", err)
+		if err = json.Unmarshal(b, &u); err == nil && u.Key != nil {
+			return u, nil
 		}
-	} else {
-		// create private key
-		privateKey, err := rsa.GenerateKey(rand.Reader, 4096)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if email == "" {
-			log.Fatal("[acme] Empty email address")
-		}
-
-		// Create new user
-		u = SSLUser{
-			Email: email,
-			Key:   privateKey,
-		}
+		log.Println("cert: unusable SSLUser.json, creating a new ACME account:", err)
 	}
 
-	return u
+	if email == "" {
+		return u, ErrNoEmail
+	}
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 4096)
+	if err != nil {
+		return u, err
+	}
+
+	return SSLUser{
+		Email: email,
+		Key:   privateKey,
+	}, nil
 }
 
 // save the user on disk
@@ -71,10 +62,10 @@ func getUser(email string) SSLUser {
 func saveUserToDisk(u SSLUser, cacheDir string) {
 	b, err := json.MarshalIndent(u, "", "  ")
 	if err != nil {
-		fmt.Println("[FATAL] cert: failed to marshal user: ", err)
+		log.Println("[FATAL] cert: failed to marshal user: ", err)
 	}
 	err = ioutil.WriteFile(conf.CacheDir+"/SSLUser.json", b, conf.CacheDirPerm)
 	if err != nil {
-		fmt.Println("[FATAL] cert: failed to write user to disk: ", err)
+		log.Println("[FATAL] cert: failed to write user to disk: ", err)
 	}
 }

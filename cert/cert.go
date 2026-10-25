@@ -20,8 +20,12 @@ import (
 	legoLog "github.com/xenolf/lego/log"
 )
 
-// GenerateCert do all the job to obtain a new certicate from letsencrypt
-func GenerateCert(domains []string, mail string) (err error) {
+// ErrNoEmail is returned when a new ACME account is needed and no e-mail is known.
+var ErrNoEmail = errors.New("no e-mail address for the ACME account")
+
+// GenerateCert do all the job to obtain a new certicate from letsencrypt.
+// token is the DDNS token used for the DNS-01 challenge records.
+func GenerateCert(domains []string, mail, token string) (err error) {
 	CreateConfig()
 
 	_, logFile, err := utils.InitLogger()
@@ -30,8 +34,11 @@ func GenerateCert(domains []string, mail string) (err error) {
 	}
 	legoLog.Logger = log.New(logFile, "", log.LstdFlags)
 
-	//create acme client
-	client, err := createClient(getUser(mail))
+	user, err := getUser(mail)
+	if err != nil {
+		return
+	}
+	client, err := createClient(user, token)
 	if err != nil {
 		return
 	}
@@ -54,7 +61,43 @@ func GenerateCert(domains []string, mail string) (err error) {
 	return
 }
 
-func MaybeRenew(forceRenew bool) (renewdone bool, err error) {
+// Cached reports whether a certificate and its key are in the cache dir.
+func Cached() bool {
+	CreateConfig()
+	return certCached(conf.CacheDir)
+}
+
+var cacheFiles = []string{"CertResource.json", "cert.pem", "key.pem", "cert_key.pem"}
+
+// SnapshotCache saves the cached certificate files; the returned function puts
+// them back (and removes those that did not exist).
+func SnapshotCache() (restore func()) {
+	CreateConfig()
+	dir := conf.CacheDir
+	saved := map[string][]byte{}
+	for _, f := range cacheFiles {
+		if b, err := ioutil.ReadFile(filepath.Join(dir, f)); err == nil {
+			saved[f] = b
+		}
+	}
+
+	return func() {
+		for _, f := range cacheFiles {
+			p := filepath.Join(dir, f)
+			if b, ok := saved[f]; ok {
+				if err := ioutil.WriteFile(p, b, conf.CacheDirPerm); err != nil {
+					log.Println("cert: failed to restore", f, ":", err)
+				}
+			} else {
+				os.Remove(p)
+			}
+		}
+	}
+}
+
+// MaybeRenew renews the cached certificate when it expires within RenewBefore.
+// mail is only used when the ACME account must be created again.
+func MaybeRenew(forceRenew bool, mail, token string) (renewdone bool, err error) {
 	CreateConfig()
 
 	if isatty.IsTerminal(os.Stdout.Fd()) {
@@ -113,8 +156,11 @@ func MaybeRenew(forceRenew bool) (renewdone bool, err error) {
 	if int(timeLeft.Hours()) <= int(conf.RenewBefore) || forceRenew {
 		log.Printf("Certificate is about to expire, renewing...")
 
-		//create acme client
-		client, err := createClient(getUser(""))
+		user, err := getUser(mail)
+		if err != nil {
+			return false, err
+		}
+		client, err := createClient(user, token)
 		if err != nil {
 			return false, err
 		}
@@ -129,9 +175,8 @@ func MaybeRenew(forceRenew bool) (renewdone bool, err error) {
 			return false, err
 		}
 
-		err = saveCertToDisk(cert, cr.Domains, conf.CacheDir)
-		if err != nil {
-			err = fmt.Errorf("failed to write cert to disk: %v", err)
+		if err = saveCertToDisk(cert, cr.Domains, conf.CacheDir); err != nil {
+			return true, fmt.Errorf("failed to write cert to disk: %v", err)
 		}
 
 		renewdone = true
@@ -141,6 +186,7 @@ func MaybeRenew(forceRenew bool) (renewdone bool, err error) {
 }
 
 func WritePemFile(certfile string) (err error) {
+	CreateConfig()
 	in, err := os.Open(conf.CacheDir + "/cert_key.pem")
 	if err != nil {
 		return

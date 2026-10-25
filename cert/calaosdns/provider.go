@@ -9,20 +9,18 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
-	"github.com/calaos/calaos_ddns/calaos"
 	"github.com/dghubble/sling"
 	"github.com/xenolf/lego/challenge"
 	"github.com/xenolf/lego/challenge/dns01"
 	"github.com/xenolf/lego/platform/config/env"
 )
 
-const (
-	KEY_TOKEN = "ddns_token"
-	CALAOS_NS = "https://ns1.calaos.fr/"
-)
+// BaseURL is the Calaos DNS API (overridden by tests).
+var BaseURL = "https://ns1.calaos.fr/"
 
 // Config is used to configure the creation of the DNSProvider
 type Config struct {
@@ -44,12 +42,9 @@ type DNSProvider struct {
 	config *Config
 }
 
-func NewDNSProvider() (challenge.Provider, error) {
-	err, token := calaos.GetConfig(KEY_TOKEN)
-	if err != nil {
-		return nil, fmt.Errorf("calaosdns: Error reading calaos config: %v", err)
-	}
-
+// NewDNSProvider takes the token explicitly: during a name change the new
+// token is not stored in local_config.xml yet.
+func NewDNSProvider(token string) (challenge.Provider, error) {
 	config := NewDefaultConfig()
 	config.APIKey = token
 
@@ -97,14 +92,14 @@ func (d *DNSProvider) Present(domain, token, keyAuth string) error {
 		LeToken:  value,
 	}
 
-	slingReq, err := sling.New().Base(CALAOS_NS).Post("api/letsencrypt").BodyJSON(jdata).Request()
+	slingReq, err := sling.New().Base(BaseURL).Post("api/letsencrypt").BodyJSON(jdata).Request()
 	if err != nil {
 		return fmt.Errorf("calaosdns: Error creating sling: %v", err)
 	}
 
 	_, err = doRequest(slingReq)
 	if err != nil {
-		log.Printf("calaosdns: Error doing request: %v, JSON: %v", err, jdata)
+		log.Printf("calaosdns: Error doing request for %v: %v", jdata.LeDomain, err)
 		return fmt.Errorf("calaosdns: Error doing request")
 	}
 
@@ -123,14 +118,14 @@ func (d *DNSProvider) CleanUp(domain, token, keyAuth string) error {
 		LeDomain: subdomain,
 	}
 
-	slingReq, err := sling.New().Base(CALAOS_NS).Delete("api/letsencrypt").BodyJSON(jdata).Request()
+	slingReq, err := sling.New().Base(BaseURL).Delete("api/letsencrypt").BodyJSON(jdata).Request()
 	if err != nil {
 		return fmt.Errorf("calaosdns: Error creating sling: %v", err)
 	}
 
 	_, err = doRequest(slingReq)
 	if err != nil {
-		log.Printf("calaosdns: Error doing request: %v, JSON: %v", err, jdata)
+		log.Printf("calaosdns: Error doing request for %v: %v", jdata.LeDomain, err)
 		return fmt.Errorf("calaosdns: Error doing request")
 	}
 
@@ -142,18 +137,18 @@ func doRequest(req *http.Request) (data []byte, err error) {
 		Message string `json:"message"`
 	}{Message: ""}
 
-	client := &http.Client{}
-	if resp, err := client.Do(req); err != nil {
-		fmt.Println("Error:", err)
-		return nil, err
-	} else {
-		defer resp.Body.Close()
-		if resp.StatusCode >= 400 {
-			json.NewDecoder(resp.Body).Decode(&failJson)
-			return nil, fmt.Errorf("Error: %v", failJson.Message)
+	client := &http.Client{Timeout: 60 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		if ue, ok := err.(*url.Error); ok {
+			err = ue.Err
 		}
-		return ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed: %v", err)
 	}
-
-	return
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		json.NewDecoder(resp.Body).Decode(&failJson)
+		return nil, fmt.Errorf("Error: %v", failJson.Message)
+	}
+	return ioutil.ReadAll(resp.Body)
 }

@@ -32,7 +32,8 @@ var (
 )
 
 func createConfig() *Config {
-	c := Default
+	// A copy: appending to Default itself would accumulate backends across calls.
+	c := &Config{Banner: Default.Banner}
 
 	//Create default calaos-server backend
 	defBackend := &HaBackend{
@@ -125,19 +126,21 @@ func RenderConfig(outFile string, templateFile string, config *Config) error {
 		return err
 	}
 
+	t, err := template.New(templateFile).Parse(string(f))
+	if err != nil {
+		return err
+	}
+
 	fp, err := os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
-	defer fp.Close()
 
-	t := template.Must(template.New(templateFile).Parse(string(f)))
 	err = t.Execute(fp, &config)
-	if err != nil {
-		return err
+	if cerr := fp.Close(); err == nil {
+		err = cerr
 	}
-
-	return nil
+	return err
 }
 
 func isValidHostname(host string) bool {
